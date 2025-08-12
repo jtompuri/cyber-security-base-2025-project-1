@@ -1,0 +1,51 @@
+{% extends 'shortener/base.html' %}
+
+{% block title %}URL Details - Vulnerable URL Shortener{% endblock %}
+{% block header %}URL Details{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    <p><strong>FLAW:</strong> Anyone can view any URL details by changing the ID in the URL (Broken Access Control)</p>
+</div>
+
+<div class="form-group">
+    <h3>URL Information</h3>
+    <table>
+        <tr><th>Short Code</th><td><a href="/s/{{ url.short_code }}/" target="_blank">{{ url.short_code }}</a></td></tr>
+        <tr><th>Original URL</th><td><a href="{{ url.original_url }}" target="_blank">{{ url.original_url }}</a></td></tr>
+        <tr><th>Created By</th><td>{{ url.created_by|default:"Anonymous" }}</td></tr>
+        <tr><th>Created At</th><td>{{ url.created_at }}</td></tr>
+        <tr><th>Click Count</th><td>{{ url.click_count }}</td></tr>
+        <tr><th>Active</th><td>{{ url.is_active|yesno:"Yes,No" }}</td></tr>
+        <tr><th>Notes</th><td>{{ url.notes|default:"No notes" }}</td></tr>
+    </table>
+</div>
+
+{% if clicks %}
+<div class="form-group">
+    <h2>Recent Clicks (Last 10)</h2>
+    <table>
+        <tr>
+            <th>IP Address</th>
+            <th>User Agent</th>
+            <th>Clicked At</th>
+            <th>Referer</th>
+        </tr>
+        {% for click in clicks %}
+        <tr>
+            <td>{{ click.ip_address }}</td>
+            <td>{{ click.user_agent|truncatechars:50 }}</td>
+            <td>{{ click.clicked_at }}</td>
+            <td>{{ click.referer|default:"Direct" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<div class="alert alert-warning">
+    <h4>Access Control Vulnerability:</h4>
+    <p>Try changing the URL ID (e.g., /details/1/, /details/2/, etc.) to access other users' URL details without authentication!</p>
+    <p><strong>Secure Fix:</strong> Implement proper authorization checks to ensure users can only access their own URLs.</p>
+</div>
+{% endblock %}

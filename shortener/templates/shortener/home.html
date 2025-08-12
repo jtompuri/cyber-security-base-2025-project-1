@@ -1,0 +1,64 @@
+{% extends 'shortener/base.html' %}
+
+{% block content %}
+<div class="alert alert-warning">
+    <h3>Security Vulnerabilities Demonstrated</h3>
+    <p>This application contains 5 OWASP Top 10 2021 vulnerabilities for educational purposes:</p>
+    <ol>
+        <li><strong>Broken Access Control:</strong> URL details accessible without authorization</li>
+        <li><strong>Injection:</strong> SQL injection in search functionality</li>
+        <li><strong>Insecure Design:</strong> Missing CSRF protection</li>
+        <li><strong>Security Misconfiguration:</strong> Debug mode, weak sessions</li>
+        <li><strong>Authentication Failures:</strong> Weak login system</li>
+    </ol>
+    <p><em>Each vulnerability has fix comments in the source code.</em></p>
+</div>
+
+<div class="alert alert-danger">
+    <h3>Test Attacks (Educational Use Only)</h3>
+    
+    <p><strong>CSRF Attack:</strong> Run <code>python -m http.server 8001</code> at the project's root folder, then visit 
+    <a href="http://localhost:8001/csrf_attack_demo.html" target="_blank">the demo page</a> 
+    for automatic attacks with visual feedback.</p>
+    
+    <p><strong>SQL Injection:</strong> Try <code>' OR 1=1 --</code> in the search box below (shows all URLs), or the UNION payload to show fake data.</p>
+    
+    <p><strong>Access Control:</strong> Visit <a href="/details/1/">/details/1/</a> to see unauthorized access.</p>
+    
+    <p><strong>Authentication:</strong> Check <a href="/login/">login page</a> for weak session management.</p>
+    
+    <p><strong>Config Issues:</strong> Visit <a href="/nonexistent/">broken URLs</a> for debug info exposure.</p>
+</div>
+
+<div class="form-group">
+    <h3>Shorten a URL</h3>
+    <form onsubmit="event.preventDefault(); shortenUrl();">
+        <div class="form-group">
+            <label for="url">URL to shorten:</label>
+            <input type="url" id="url" name="url" placeholder="https://example.com" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="notes">Private notes (optional):</label>
+            <textarea id="notes" name="notes" placeholder="Add private notes..." rows="3"></textarea>
+            <small>Note: Stored in plain text (Security Misconfiguration)</small>
+        </div>
+        
+        <button type="submit">Shorten URL</button>
+        <small>This form lacks CSRF protection</small>
+    </form>
+    
+    <div id="result"></div>
+</div>
+
+<div class="form-group">
+    <h3>Search URLs</h3>
+    <div class="form-group">
+        <label for="search">Search URLs:</label>
+        <input type="text" id="search" name="search" placeholder="Enter search term">
+        <button onclick="searchUrls()">Search</button>
+        <small>Vulnerable to SQL injection</small>
+    </div>
+    <div id="search-results"></div>
+</div>
+{% endblock %}

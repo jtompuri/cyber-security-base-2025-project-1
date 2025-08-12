@@ -1,0 +1,12 @@
+{% extends 'shortener/base.html' %}
+
+{% block title %}Page Not Found - Vulnerable URL Shortener{% endblock %}
+{% block header %}Page Not Found{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    <h2>404 - Page Not Found</h2>
+    <p>The shortened URL you're looking for doesn't exist or has been disabled.</p>
+    <p><a href="{% url 'home' %}">Go back to home page</a></p>
+</div>
+{% endblock %}

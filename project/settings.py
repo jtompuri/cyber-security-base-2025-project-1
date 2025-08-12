@@ -22,10 +22,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-j=!dh^5)+v-pjj!zcg0w2acg5@gi6r$2ydp9si(cfngsrd+zzy'
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# FLAW #5: Debug mode enabled and overly permissive hosts
 DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = []
+# FIX: Set DEBUG = False and specify allowed hosts: ['yourdomain.com']
 
 
 # Application definition
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'shortener',  # Add our vulnerable app
 ]
 
 MIDDLEWARE = [
@@ -115,8 +117,39 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "shortener" / "static",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# FLAW #4 & #5: Weak session configuration
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = False
+SESSION_COOKIE_SAMESITE = None
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 86400 * 7  # 7 days
+
+# FIX: SESSION_COOKIE_SECURE = True, SESSION_COOKIE_HTTPONLY = True, etc.
+
+# FLAW #5: Verbose logging exposes sensitive information
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+# FIX: Use file handler with WARNING level for production

@@ -1,0 +1,33 @@
+{% extends 'shortener/base.html' %}
+
+{% block title %}My URLs - Vulnerable URL Shortener{% endblock %}
+{% block header %}My URLs{% endblock %}
+
+{% block content %}
+<div class="form-group">
+    <h2>Your Shortened URLs</h2>
+    
+    {% if urls %}
+    <table>
+        <tr>
+            <th>Short Code</th>
+            <th>Original URL</th>
+            <th>Created</th>
+            <th>Clicks</th>
+            <th>Actions</th>
+        </tr>
+        {% for url in urls %}
+        <tr>
+            <td><a href="/s/{{ url.short_code }}/" target="_blank">{{ url.short_code }}</a></td>
+            <td><a href="{{ url.original_url }}" target="_blank">{{ url.original_url|truncatechars:50 }}</a></td>
+            <td>{{ url.created_at|date:"M d, Y H:i" }}</td>
+            <td>{{ url.click_count }}</td>
+            <td><a href="{% url 'url_details' url.id %}">View Details</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>You haven't created any shortened URLs yet. <a href="{% url 'home' %}">Create one now!</a></p>
+    {% endif %}
+</div>
+{% endblock %}

