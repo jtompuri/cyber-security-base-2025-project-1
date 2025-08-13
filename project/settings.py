@@ -27,6 +27,9 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 # FIX: Set DEBUG = False and specify allowed hosts: ['yourdomain.com']
+# SECURE VERSION:
+# DEBUG = False
+# ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -134,6 +137,18 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_COOKIE_AGE = 86400 * 7  # 7 days
 
 # FIX: SESSION_COOKIE_SECURE = True, SESSION_COOKIE_HTTPONLY = True, etc.
+# SECURE VERSION:
+# SESSION_COOKIE_SECURE = True          # Only send over HTTPS
+# SESSION_COOKIE_HTTPONLY = True        # Not accessible via JavaScript
+# SESSION_COOKIE_SAMESITE = 'Strict'    # CSRF protection
+# SESSION_EXPIRE_AT_BROWSER_CLOSE = True # Session expires when browser closes
+# SESSION_COOKIE_AGE = 3600             # 1 hour timeout
+# CSRF_COOKIE_SECURE = True             # CSRF cookie only over HTTPS
+# CSRF_COOKIE_HTTPONLY = True           # CSRF cookie not accessible via JS
+# SECURE_SSL_REDIRECT = True            # Force HTTPS in production
+# SECURE_HSTS_SECONDS = 31536000        # HTTP Strict Transport Security
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
 # FLAW #5: Verbose logging exposes sensitive information
 LOGGING = {
@@ -153,3 +168,28 @@ LOGGING = {
 }
 
 # FIX: Use file handler with WARNING level for production
+# SECURE VERSION:
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {module} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'file': {
+#             'class': 'logging.FileHandler',
+#             'filename': 'django.log',
+#             'formatter': 'verbose',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'WARNING',  # Only log warnings and errors
+#             'propagate': False,
+#         },
+#     },
+# }

@@ -39,6 +39,30 @@ def shorten_url(request):
     return render(request, 'shortener/home.html')
 
 # FIX: Remove @csrf_exempt and add {% csrf_token %} to forms
+# SECURE VERSION:
+# def shorten_url(request):
+#     """Create a shortened URL - SECURE VERSION"""
+#     if request.method == 'POST':
+#         original_url = request.POST.get('url', '')
+#         notes = request.POST.get('notes', '')
+#         
+#         if not original_url:
+#             return JsonResponse({'error': 'URL is required'}, status=400)
+#         
+#         short_code = ShortenedURL.generate_short_code()
+#         shortened = ShortenedURL.objects.create(
+#             original_url=original_url,
+#             short_code=short_code,
+#             created_by=request.user if request.user.is_authenticated else None,
+#             notes=notes
+#         )
+#         
+#         return JsonResponse({
+#             'short_url': f"{request.get_host()}/s/{short_code}",
+#             'short_code': short_code
+#         })
+#     
+#     return render(request, 'shortener/home.html')
 
 # FLAW #2: SQL injection vulnerability
 def search_urls(request):
@@ -64,6 +88,20 @@ def search_urls(request):
     return JsonResponse({'urls': []})
 
 # FIX: Use parameterized queries - ShortenedURL.objects.filter(original_url__icontains=query)
+# SECURE VERSION:
+# def search_urls(request):
+#     """Search URLs - SECURE VERSION using Django ORM"""
+#     query = request.GET.get('q', '')
+#     if query:
+#         # Use Django ORM to prevent SQL injection
+#         urls_queryset = ShortenedURL.objects.filter(
+#             original_url__icontains=query
+#         ).values('id', 'original_url', 'short_code', 'created_at')
+#         
+#         urls = list(urls_queryset)
+#         return JsonResponse({'urls': urls})
+#     
+#     return JsonResponse({'urls': []})
 
 def redirect_url(request, short_code):
     """Redirect to original URL and log the click"""
@@ -118,6 +156,21 @@ def url_details(request, url_id):
         return render(request, 'shortener/404.html', status=404)
 
 # FIX: Add @login_required and check url.created_by == request.user
+# SECURE VERSION:
+# @login_required
+# def url_details(request, url_id):
+#     """View URL details - SECURE VERSION with proper access control"""
+#     try:
+#         # Only allow users to view their own URLs
+#         url = ShortenedURL.objects.get(id=url_id, created_by=request.user)
+#         clicks = ClickLog.objects.filter(shortened_url=url).order_by('-clicked_at')[:10]
+#         
+#         return render(request, 'shortener/url_details.html', {
+#             'url': url,
+#             'clicks': clicks
+#         })
+#     except ShortenedURL.DoesNotExist:
+#         return render(request, 'shortener/404.html', status=404)
 
 # FLAW #4: Weak session management and missing CSRF protection
 @csrf_exempt
@@ -145,3 +198,22 @@ def simple_logout(request):
     return redirect('home')
 
 # FIX: Remove @csrf_exempt, add proper session management with request.session.cycle_key()
+# SECURE VERSION:
+# def simple_login(request):
+#     """Simple login - SECURE VERSION"""
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+#         
+#         user = authenticate(request, username=username, password=password)
+#         if user:
+#             # Regenerate session key to prevent session fixation
+#             request.session.cycle_key()
+#             login(request, user)
+#             return redirect('home')
+#         else:
+#             return render(request, 'shortener/login.html', {
+#                 'error': 'Invalid credentials'
+#             })
+#     
+#     return render(request, 'shortener/login.html')
