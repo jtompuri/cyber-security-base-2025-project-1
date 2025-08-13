@@ -4,32 +4,37 @@ This Django application demonstrates 5 critical security vulnerabilities from th
 
 ## Vulnerabilities Demonstrated
 
-### FLAW 1: Missing CSRF Protection (A04:2021 - Insecure Design)
-**Location:** `shortener/views.py` - `shorten_url()` function  
+### FLAW 1: 
+Missing CSRF Protection (A04:2021 - Insecure Design)
+https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L15
 **Issue:** `@csrf_exempt` decorator removes CSRF protection  
 **Impact:** Attackers can create malicious forms to submit URLs without user consent  
 **Fix:** Remove `@csrf_exempt`, add `{% csrf_token %}` to forms
 
-### FLAW 2: SQL Injection (A03:2021 - Injection)
-**Location:** `shortener/views.py` - `search_urls()` function  
+### FLAW 2: 
+SQL Injection (A03:2021 - Injection)
+https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L43
 **Issue:** Direct string interpolation in SQL queries  
 **Impact:** Database manipulation, data theft  
 **Fix:** Use Django ORM: `ShortenedURL.objects.filter(original_url__icontains=query)`
 
-### FLAW 3: Broken Access Control (A01:2021 - Broken Access Control)
-**Location:** `shortener/views.py` - `url_details()` function  
+### FLAW 3: 
+Broken Access Control (A01:2021 - Broken Access Control)
+https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L106
 **Issue:** No authorization checks for URL details  
 **Impact:** Users can view any URL's private details  
 **Fix:** Add `@login_required` and filter by `created_by=request.user`
 
-### FLAW 4: Weak Authentication (A07:2021 - Authentication Failures)
-**Location:** `shortener/views.py` - `simple_login()` function  
+### FLAW 4: 
+Weak Authentication (A07:2021 - Authentication Failures)
+https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L122
 **Issue:** Missing CSRF protection, no session regeneration, weak settings  
 **Impact:** Session fixation, brute force attacks  
 **Fix:** Remove `@csrf_exempt`, use `request.session.cycle_key()`, add rate limiting
 
-### FLAW 5: Security Misconfiguration (A05:2021 - Security Misconfiguration)
-**Location:** `project/settings.py`  
+### FLAW 5: 
+Security Misconfiguration (A05:2021 - Security Misconfiguration)
+https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/project/settings.py#L25
 **Issue:** Debug mode enabled, weak session settings, verbose logging  
 **Impact:** Information disclosure, session vulnerabilities  
 **Fix:** Set `DEBUG = False`, configure secure session settings
