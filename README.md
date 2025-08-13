@@ -1,4 +1,4 @@
-# Vulnerable URL Shortener - OWASP Top 10 2021 Demo
+# Vulnerable URL Shortener
 
 This Django application demonstrates 5 critical security vulnerabilities from the OWASP Top 10 2021 for educational purposes.
 
