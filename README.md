@@ -4,36 +4,31 @@ This Django application demonstrates 5 critical security vulnerabilities from th
 
 ## Vulnerabilities Demonstrated
 
-### FLAW 1: 
-Missing CSRF Protection (A04:2021 - Insecure Design)
+**FLAW 1:** Missing CSRF Protection (A04:2021 - Insecure Design)
 **Location:** https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L15
 **Issue:** `@csrf_exempt` decorator removes CSRF protection  
 **Impact:** Attackers can create malicious forms to submit URLs without user consent  
 **Fix:** Remove `@csrf_exempt`, add `{% csrf_token %}` to forms
 
-### FLAW 2: 
-SQL Injection (A03:2021 - Injection)
+**FLAW 2:** SQL Injection (A03:2021 - Injection)
 **Location:** https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L43
 **Issue:** Direct string interpolation in SQL queries  
 **Impact:** Database manipulation, data theft  
 **Fix:** Use Django ORM: `ShortenedURL.objects.filter(original_url__icontains=query)`
 
-### FLAW 3: 
-Broken Access Control (A01:2021 - Broken Access Control)
+**FLAW 3:** Broken Access Control (A01:2021 - Broken Access Control)
 **Location:** https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L106
 **Issue:** No authorization checks for URL details  
 **Impact:** Users can view any URL's private details  
 **Fix:** Add `@login_required` and filter by `created_by=request.user`
 
-### FLAW 4: 
-Weak Authentication (A07:2021 - Authentication Failures)
+**FLAW 4:** Weak Authentication (A07:2021 - Authentication Failures)
 **Location:** https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/shortener/views.py#L122
 **Issue:** Missing CSRF protection, no session regeneration, weak settings  
 **Impact:** Session fixation, brute force attacks  
 **Fix:** Remove `@csrf_exempt`, use `request.session.cycle_key()`, add rate limiting
 
-### FLAW 5: 
-Security Misconfiguration (A05:2021 - Security Misconfiguration)
+**FLAW 5:** Security Misconfiguration (A05:2021 - Security Misconfiguration)
 **Location:** https://github.com/jtompuri/cyber-security-base-2025-project-1/blob/main/project/settings.py#L25
 **Issue:** Debug mode enabled, weak session settings, verbose logging  
 **Impact:** Information disclosure, session vulnerabilities  
