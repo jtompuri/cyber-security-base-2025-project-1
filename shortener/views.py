@@ -45,10 +45,10 @@ def shorten_url(request):
 #     if request.method == 'POST':
 #         original_url = request.POST.get('url', '')
 #         notes = request.POST.get('notes', '')
-#         
+        
 #         if not original_url:
 #             return JsonResponse({'error': 'URL is required'}, status=400)
-#         
+        
 #         short_code = ShortenedURL.generate_short_code()
 #         shortened = ShortenedURL.objects.create(
 #             original_url=original_url,
@@ -56,12 +56,12 @@ def shorten_url(request):
 #             created_by=request.user if request.user.is_authenticated else None,
 #             notes=notes
 #         )
-#         
+        
 #         return JsonResponse({
 #             'short_url': f"{request.get_host()}/s/{short_code}",
 #             'short_code': short_code
 #         })
-#     
+    
 #     return render(request, 'shortener/home.html')
 
 # FLAW #2: SQL injection vulnerability
@@ -97,10 +97,10 @@ def search_urls(request):
 #         urls_queryset = ShortenedURL.objects.filter(
 #             original_url__icontains=query
 #         ).values('id', 'original_url', 'short_code', 'created_at')
-#         
+        
 #         urls = list(urls_queryset)
 #         return JsonResponse({'urls': urls})
-#     
+    
 #     return JsonResponse({'urls': []})
 
 def redirect_url(request, short_code):
@@ -164,7 +164,7 @@ def url_details(request, url_id):
 #         # Only allow users to view their own URLs
 #         url = ShortenedURL.objects.get(id=url_id, created_by=request.user)
 #         clicks = ClickLog.objects.filter(shortened_url=url).order_by('-clicked_at')[:10]
-#         
+        
 #         return render(request, 'shortener/url_details.html', {
 #             'url': url,
 #             'clicks': clicks
@@ -192,11 +192,6 @@ def simple_login(request):
     
     return render(request, 'shortener/login.html')
 
-def simple_logout(request):
-    """Logout the user"""
-    logout(request)
-    return redirect('home')
-
 # FIX: Remove @csrf_exempt, add proper session management with request.session.cycle_key()
 # SECURE VERSION:
 # def simple_login(request):
@@ -204,7 +199,7 @@ def simple_logout(request):
 #     if request.method == 'POST':
 #         username = request.POST.get('username')
 #         password = request.POST.get('password')
-#         
+        
 #         user = authenticate(request, username=username, password=password)
 #         if user:
 #             # Regenerate session key to prevent session fixation
@@ -215,5 +210,10 @@ def simple_logout(request):
 #             return render(request, 'shortener/login.html', {
 #                 'error': 'Invalid credentials'
 #             })
-#     
+    
 #     return render(request, 'shortener/login.html')
+
+def simple_logout(request):
+    """Logout the user"""
+    logout(request)
+    return redirect('home')
