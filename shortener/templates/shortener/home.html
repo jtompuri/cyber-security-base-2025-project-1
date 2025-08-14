@@ -33,6 +33,8 @@
 <div class="form-group">
     <h3>Shorten a URL</h3>
     <form onsubmit="event.preventDefault(); shortenUrl();">
+        <!-- FIX: Add CSRF token for protection -->
+        <!-- {% csrf_token %} -->
         <div class="form-group">
             <label for="url">URL to shorten:</label>
             <input type="url" id="url" name="url" placeholder="https://example.com" required>

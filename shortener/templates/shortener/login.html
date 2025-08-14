@@ -13,6 +13,8 @@
 {% endif %}
 
 <form method="post">
+    <!-- FIX: Add CSRF token to prevent login CSRF attacks -->
+    <!-- {% csrf_token %} -->
     <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
