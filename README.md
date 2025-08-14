@@ -2,11 +2,6 @@
 
 This Django application demonstrates 5 critical security vulnerabilities from the OWASP Top 10 2021 for the Cyber Security Base 2025 course.
 
-## Table of Contents
-- [Quick Start](#quick-start)
-- [Testing Vulnerabilities](#testing-vulnerabilities)
-- [Vulnerabilities Explained](#vulnerabilities-explained)
-
 ## Quick Start
 
 ### Installation
