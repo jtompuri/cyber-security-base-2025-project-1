@@ -209,12 +209,12 @@ def custom_register(request):
 #         username = request.POST.get('username')
 #         password = request.POST.get('password')
 #         email = request.POST.get('email', '')
-#         
+        
 #         if User.objects.filter(username=username).exists():
 #             return render(request, 'shortener/register.html', {
 #                 'error': 'Username already exists'
 #             })
-#         
+        
 #         # SECURE: Use Django's make_password which uses PBKDF2 with SHA256
 #         user = User.objects.create(
 #             username=username,
@@ -222,9 +222,9 @@ def custom_register(request):
 #         )
 #         user.set_password(password)  # Uses secure PBKDF2 hashing with salt
 #         user.save()
-#         
+        
 #         return redirect('login')
-#     
+    
 #     return render(request, 'shortener/register.html')
 
 def simple_login(request):
@@ -266,7 +266,7 @@ def simple_login(request):
 #     if request.method == 'POST':
 #         username = request.POST.get('username')
 #         password = request.POST.get('password')
-#         
+        
 #         # SECURE: Use Django's authenticate which uses check_password internally
 #         user = authenticate(request, username=username, password=password)
 #         if user:
@@ -276,7 +276,7 @@ def simple_login(request):
 #             return render(request, 'shortener/login.html', {
 #                 'error': 'Invalid credentials'
 #             })
-#     
+    
 #     return render(request, 'shortener/login.html')
 
 def simple_logout(request):
