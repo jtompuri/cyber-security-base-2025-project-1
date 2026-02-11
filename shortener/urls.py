@@ -7,6 +7,7 @@ urlpatterns = [
     path('search/', views.search_urls, name='search_urls'),
     path('s/<str:short_code>/', views.redirect_url, name='redirect_url'),
     path('details/<int:url_id>/', views.url_details, name='url_details'),
+    path('register/', views.custom_register, name='register'),
     path('login/', views.simple_login, name='login'),
     path('logout/', views.simple_logout, name='logout'),
     path('my-urls/', views.my_urls, name='my_urls'),

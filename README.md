@@ -80,14 +80,13 @@ Needed to demonstrate access control vulnerabilities and cross-user attacks.
 #### 1. CSRF Attack Testing
 **Setup:** Visit http://localhost:8001/csrf_attack_demo.html while logged into Django (http://localhost:8000)
 
-**Attack #1 - URL Creation:** Creates malicious URLs in victim's account  
-**Attack #2 - Login/Session Fixation:** Logs victim into attacker's account
+**Attack - URL Creation:** Creates malicious URLs in victim's account
 
 **What Happens:** 
-- Forms submit to hidden iframes for seamless demonstration
+- Form submits to hidden iframe for seamless demonstration
 - Real-time feedback shows attack status on demo page
 - No browser redirects - stay on demo page throughout testing
-- Demonstrates core CSRF vulnerabilities with immediate verification
+- Demonstrates core CSRF vulnerability with immediate verification
 
 #### 2. SQL Injection Testing
 **Basic Test:** Search with `' OR 1=1 --`
@@ -115,18 +114,23 @@ Needed to demonstrate access control vulnerabilities and cross-user attacks.
 2. Switch to different user account
 3. Access first user's URL by changing ID in URL
 
-#### 4. Authentication Testing
-**Session Fixation Test:**
-1. Open Developer Tools → Network tab
-2. Note session ID before login
-3. Log in and check if session ID changes
-4. **Expected (Vulnerable):** Session ID stays same
-5. **Secure Behavior:** Session ID should change
+#### 4. Cryptographic Failures Testing (MD5 Password Hashing)
+**Registration Vulnerability:**
+1. Visit `/register/` and create a new account
+2. Check the database: `sqlite3 db.sqlite3 "SELECT username, password FROM auth_user;"`
+3. **Observe:** Password is stored as 32-character MD5 hash (no salt)
+4. **Compare:** Admin user has a long PBKDF2 hash with salt prefix
 
-**CSRF Login Test:**
-- Login form lacks CSRF protection
-- Enables malicious login forms
-- Users could unknowingly use attacker accounts
+**Hash Cracking Demonstration:**
+1. Register user with password `password123`
+2. MD5 hash will be: `482c811da5d5b4bc6d497ffa98491e38`
+3. Use online MD5 lookup (e.g., crackstation.net) to instantly recover password
+4. **Impact:** Rainbow tables contain billions of pre-computed MD5 hashes
+
+**Login Vulnerability:**
+- Login uses weak MD5 comparison: `hashlib.md5(password.encode()).hexdigest()`
+- No key stretching or iterations
+- Enables rapid brute-force attacks
 
 #### 5. Security Misconfiguration Testing
 **Debug Info Exposure:**

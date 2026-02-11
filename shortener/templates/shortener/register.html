@@ -1,0 +1,50 @@
+{% extends 'shortener/base.html' %}
+
+{% block title %}Register - Vulnerable URL Shortener{% endblock %}
+{% block header %}Register{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    <p><strong>FLAW:</strong> This registration form uses weak MD5 password hashing instead of Django's secure PBKDF2 hashing (Cryptographic Failures - A02:2021)</p>
+</div>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    
+    <button type="submit">Register</button>
+</form>
+
+<p><small>
+    Already have an account? <a href="{% url 'login' %}">Login here</a><br><br>
+    <strong>Vulnerability:</strong> Passwords are hashed with MD5 (extremely weak, no salt, easily cracked with rainbow tables)
+</small></p>
+
+<div class="alert alert-warning">
+    <h4>Cryptographic Vulnerability Details:</h4>
+    <ul>
+        <li><strong>MD5 is deprecated:</strong> Considered cryptographically broken since 2004</li>
+        <li><strong>No salting:</strong> Same passwords produce identical hashes, enabling rainbow table attacks</li>
+        <li><strong>Fast computation:</strong> GPUs can compute billions of MD5 hashes per second</li>
+        <li><strong>Collision vulnerabilities:</strong> Different inputs can produce the same hash</li>
+    </ul>
+    <p><strong>Impact:</strong> If database is compromised, attackers can quickly recover most passwords using tools like Hashcat</p>
+</div>
+{% endblock %}

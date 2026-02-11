@@ -4,9 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 from django.db import connection
 from .models import ShortenedURL, ClickLog
 import json
+import hashlib
 
 def home(request):
     """Home page with URL shortening form"""
@@ -172,45 +174,109 @@ def url_details(request, url_id):
 #     except ShortenedURL.DoesNotExist:
 #         return render(request, 'shortener/404.html', status=404)
 
-# FLAW #4: Weak session management and missing CSRF protection
-@csrf_exempt
+# FLAW #4: Cryptographic Failures - Weak MD5 password hashing
+def custom_register(request):
+    """Register new user - VULNERABLE: uses weak MD5 hashing"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        email = request.POST.get('email', '')
+        
+        if User.objects.filter(username=username).exists():
+            return render(request, 'shortener/register.html', {
+                'error': 'Username already exists'
+            })
+        
+        # VULNERABLE: Using weak MD5 hashing instead of Django's secure password hashing
+        password_hash = hashlib.md5(password.encode()).hexdigest()
+        
+        # Create user with MD5 hashed password stored in password field
+        user = User.objects.create(
+            username=username,
+            email=email,
+            password=password_hash  # Storing weak MD5 hash
+        )
+        
+        return redirect('login')
+    
+    return render(request, 'shortener/register.html')
+
+# FIX: Use Django's built-in password hashing system
+# SECURE VERSION:
+# def custom_register(request):
+#     """Register new user - SECURE VERSION using Django's password hashing"""
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+#         email = request.POST.get('email', '')
+#         
+#         if User.objects.filter(username=username).exists():
+#             return render(request, 'shortener/register.html', {
+#                 'error': 'Username already exists'
+#             })
+#         
+#         # SECURE: Use Django's make_password which uses PBKDF2 with SHA256
+#         user = User.objects.create(
+#             username=username,
+#             email=email
+#         )
+#         user.set_password(password)  # Uses secure PBKDF2 hashing with salt
+#         user.save()
+#         
+#         return redirect('login')
+#     
+#     return render(request, 'shortener/register.html')
+
 def simple_login(request):
-    """Simple login - VULNERABLE to session fixation and CSRF attacks"""
+    """Simple login - VULNERABLE: uses weak MD5 password comparison"""
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
         
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            request.session.set_expiry(0)  # Session expires when browser closes
-            return redirect('home')
-        else:
+        try:
+            user = User.objects.get(username=username)
+            # VULNERABLE: MD5 comparison for users registered with custom_register
+            password_hash = hashlib.md5(password.encode()).hexdigest()
+            
+            if user.password == password_hash:
+                # Manual login for MD5 users
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                return redirect('home')
+            else:
+                # Fall back to Django's authenticate for admin/existing users
+                auth_user = authenticate(request, username=username, password=password)
+                if auth_user:
+                    login(request, auth_user)
+                    return redirect('home')
+                    
+            return render(request, 'shortener/login.html', {
+                'error': 'Invalid credentials'
+            })
+        except User.DoesNotExist:
             return render(request, 'shortener/login.html', {
                 'error': 'Invalid credentials'
             })
     
     return render(request, 'shortener/login.html')
 
-# FIX: Remove @csrf_exempt, add proper session management with request.session.cycle_key()
+# FIX: Use Django's authenticate() which uses secure password verification
 # SECURE VERSION:
 # def simple_login(request):
-#     """Simple login - SECURE VERSION"""
+#     """Simple login - SECURE VERSION using Django's authentication"""
 #     if request.method == 'POST':
 #         username = request.POST.get('username')
 #         password = request.POST.get('password')
-        
+#         
+#         # SECURE: Use Django's authenticate which uses check_password internally
 #         user = authenticate(request, username=username, password=password)
 #         if user:
-#             # Regenerate session key to prevent session fixation
-#             request.session.cycle_key()
 #             login(request, user)
 #             return redirect('home')
 #         else:
 #             return render(request, 'shortener/login.html', {
 #                 'error': 'Invalid credentials'
 #             })
-    
+#     
 #     return render(request, 'shortener/login.html')
 
 def simple_logout(request):

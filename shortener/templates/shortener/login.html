@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="alert alert-warning">
-    <p>This login demonstrates authentication vulnerabilities including missing CSRF protection and weak session management.</p>
+    <p>This login uses weak MD5 password comparison for users registered via the vulnerable registration form (Cryptographic Failures - A02:2021).</p>
 </div>
 
 {% if error %}
@@ -13,8 +13,7 @@
 {% endif %}
 
 <form method="post">
-    <!-- FIX: Add CSRF token to prevent login CSRF attacks -->
-    <!-- {% csrf_token %} -->
+    {% csrf_token %}
     <div class="form-group">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
@@ -30,6 +29,17 @@
 
 <p><small>
     Test credentials: admin/admin<br>
-    Vulnerabilities: No CSRF protection, no rate limiting, weak sessions
+    Don't have an account? <a href="{% url 'register' %}">Register here</a> (uses vulnerable MD5 hashing)
 </small></p>
+
+<div class="alert alert-danger">
+    <h4>Cryptographic Vulnerability:</h4>
+    <p>Users registered through <a href="{% url 'register' %}">/register/</a> have passwords hashed with MD5, which is:
+    <ul>
+        <li>Extremely fast to crack (billions of attempts/second)</li>
+        <li>Vulnerable to rainbow table attacks (no salt)</li>
+        <li>Cryptographically broken since 2004</li>
+    </ul>
+    </p>
+</div>
 {% endblock %}

